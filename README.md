@@ -4,40 +4,40 @@
 Hệ thống quản lý nhà thông minh sử dụng Raspberry Pi 5 để giám sát trạng thái cửa và tích hợp với ESP32 camera để chụp ảnh khi phát hiện cửa mở.
 
 ## Tính Năng (Features)
-- ✅ Giám sát 2 cảm biến cửa (Door 1 và Door 2)
-- ✅ Phát hiện trạng thái đóng/mở cửa real-time
-- ✅ Tự động gửi yêu cầu chụp ảnh đến ESP32 qua HTTP
-- ✅ Nhận và lưu ảnh từ ESP32
-- ✅ Gửi thông báo đến web interface
-- ✅ Log hệ thống chi tiết
+- Giám sát 2 cảm biến cửa (Door 1 và Door 2)
+- Phát hiện trạng thái đóng/mở cửa real-time
+- Tự động gửi yêu cầu chụp ảnh đến ESP32 qua HTTP
+- Nhận và lưu ảnh từ ESP32
+- Gửi thông báo đến web interface
+- Log hệ thống chi tiết
 
 ## Kiến Trúc Hệ Thống (System Architecture)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │             Raspberry Pi 5 (Main Controller)            │
-│                                                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │Door Sensor 1 │  │Door Sensor 2 │  │  GPIO Pins   │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────────────┘  │
-│         │                  │                             │
-│         └─────────┬────────┘                             │
-│                   │                                      │
+│                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │Door Sensor 1 │  │Door Sensor 2 │  │  GPIO Pins   │   │
+│  └──────┬───────┘  └──────┬───────┘  └──────────────┘   │
+│         │                  │                            │
+│         └─────────┬────────┘                            │
+│                   │                                     │
 │         ┌─────────▼──────────┐                          │
 │         │  door_sensor.py    │                          │
 │         │  (Monitor Module)  │                          │
 │         └─────────┬──────────┘                          │
-│                   │                                      │
+│                   │                                     │
 │         ┌─────────▼──────────┐                          │
 │         │    main.py         │                          │
 │         │  (Controller)      │                          │
 │         └─────────┬──────────┘                          │
-│                   │                                      │
+│                   │                                     │
 │         ┌─────────▼──────────┐                          │
-│         │ esp32_camera.py    │◄──HTTP──┐               │
+│         │ esp32_camera.py    │◄──HTTP──┐                │
 │         │  (Camera Client)   │          │               │
 │         └─────────┬──────────┘          │               │
-│                   │                      │               │
+│                   │                     │               │
 │         ┌─────────▼──────────┐          │               │
 │         │ web_notifier.py    │          │               │
 │         │ (Web Interface)    │          │               │
@@ -254,20 +254,13 @@ sudo usermod -a -G gpio pi
 
 ## Bảo Mật (Security)
 
-- ⚠️ Thay đổi default credentials
-- ⚠️ Sử dụng HTTPS cho web API
-- ⚠️ Giới hạn quyền truy cập GPIO
-- ⚠️ Cập nhật hệ thống thường xuyên
+- Thay đổi default credentials
+- Sử dụng HTTPS cho web API
+- Giới hạn quyền truy cập GPIO
+- Cập nhật hệ thống thường xuyên
 
 ## Tác Giả (Author)
-Smart Home IoT Project
-
-## License
-MIT License
-
-## Liên Hệ (Contact)
-- Issues: Tạo issue trên GitHub repository
-- Email: your-email@example.com
+VNAQ
 
 ---
 **Lưu Ý**: Đây là hệ thống demo. Cần bổ sung các tính năng bảo mật và xử lý lỗi chi tiết hơn cho môi trường production.
