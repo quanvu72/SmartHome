@@ -1,0 +1,31 @@
+# Smart Home Management System - Python Dependencies
+
+# HTTP requests
+requests>=2.31.0
+
+# GPIO control for Raspberry Pi (chỉ cần trên Raspberry Pi)
+# RPi.GPIO>=0.7.1
+
+# Optional: Thư viện bổ sung cho production
+
+# Logging nâng cao
+# python-json-logger>=2.0.7
+
+# Monitoring và metrics
+# psutil>=5.9.6
+
+# Web framework nếu muốn tạo local web interface
+# flask>=3.0.0
+# flask-cors>=4.0.0
+
+# Database nếu muốn lưu trữ logs
+# sqlalchemy>=2.0.23
+
+# Image processing (nếu muốn xử lý ảnh)
+# Pillow>=10.1.0
+
+# MQTT client (nếu muốn dùng MQTT thay vì HTTP)
+# paho-mqtt>=1.6.1
+
+# Configuration management
+# python-dotenv>=1.0.0

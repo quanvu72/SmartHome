@@ -1,0 +1,27 @@
+{
+  "door_sensors": {
+    "door1_pin": 17,
+    "door2_pin": 27,
+    "description": "GPIO pins cho 2 cảm biến cửa (BCM numbering)"
+  },
+  "esp32": {
+    "ip": "192.168.1.100",
+    "port": 80,
+    "timeout": 10,
+    "description": "Cấu hình ESP32-CAM (thay đổi IP theo thiết bị của bạn)"
+  },
+  "web_server": {
+    "url": "http://localhost:3000/api/notification",
+    "timeout": 5,
+    "retry_count": 3,
+    "use_mock": true,
+    "description": "Cấu hình web server API. Đặt use_mock=false khi có server thật"
+  },
+  "system": {
+    "image_path": "images",
+    "log_path": "logs",
+    "log_level": "INFO",
+    "cleanup_images_days": 7,
+    "description": "Cấu hình hệ thống chung"
+  }
+}

@@ -1,0 +1,5 @@
+# Placeholder for images directory
+# Captured images from ESP32-CAM will be saved here
+
+# Image naming format: doorN_YYYYMMDD_HHMMSS.jpg
+# Example: door1_20251118_103045.jpg
