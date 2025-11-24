@@ -124,7 +124,10 @@ class SmartHomeSystem:
     def _initialize_modules(self):
         """Khởi tạo tất cả các module"""
         try:
+            self.logger.info("🔧 Đang khởi tạo các module...")
+            
             # 1. Khởi tạo ESP32 Camera Client
+            self.logger.info("📷 Khởi tạo ESP32 Camera Client...")
             esp32_config = self.config.get('esp32', {})
             system_config = self.config.get('system', {})
             
@@ -136,16 +139,20 @@ class SmartHomeSystem:
             )
             
             # Kiểm tra kết nối ESP32
+            self.logger.info(f"🔍 Kiểm tra kết nối ESP32-CAM tại {esp32_config.get('ip')}...")
             if self.camera_client.check_connection():
-                self.logger.info("✅ ESP32-CAM đã kết nối")
+                self.logger.info("✅ ESP32-CAM đã kết nối và sẵn sàng")
             else:
-                self.logger.warning("⚠️  Không thể kết nối ESP32-CAM (sẽ thử lại sau)")
+                self.logger.warning("⚠️  Không thể kết nối ESP32-CAM")
+                self.logger.warning("   Hệ thống sẽ tiếp tục chạy nhưng không chụp được ảnh")
+                self.logger.warning(f"   Kiểm tra: ping {esp32_config.get('ip')}")
             
             # 2. Khởi tạo Web Notifier
+            self.logger.info("🌐 Khởi tạo Web Notifier...")
             web_config = self.config.get('web_server', {})
             
             if web_config.get('use_mock', False):
-                self.logger.info("Sử dụng Mock Web Notifier")
+                self.logger.info("   → Sử dụng Mock Web Notifier (không gửi HTTP thật)")
                 self.web_notifier = MockWebNotifier()
             else:
                 self.web_notifier = WebNotifier(
@@ -155,6 +162,7 @@ class SmartHomeSystem:
                 )
             
             # 3. Khởi tạo Door Sensor Monitor (cuối cùng để bắt đầu monitoring)
+            self.logger.info("🚪 Khởi tạo Door Sensor Monitor...")
             door_config = self.config.get('door_sensors', {})
             
             self.door_monitor = DoorSensorMonitor(
@@ -163,7 +171,7 @@ class SmartHomeSystem:
                 callback=self._on_door_opened
             )
             
-            self.logger.info("✅ Đã khởi tạo tất cả các module")
+            self.logger.info("✅ Đã khởi tạo tất cả các module thành công!")
             
         except Exception as e:
             self.logger.error(f"❌ Lỗi khi khởi tạo modules: {e}")
@@ -171,7 +179,8 @@ class SmartHomeSystem:
     
     def _on_door_opened(self, event_data: Dict):
         """
-        Callback khi phát hiện cửa được mở
+        Callback khi phát hiện cửa được mở (GPIO HIGH)
+        Workflow: Phát hiện cửa mở → Chụp ảnh → Lưu ảnh → Gửi thông báo
         
         Args:
             event_data: Dictionary chứa thông tin sự kiện
@@ -179,17 +188,24 @@ class SmartHomeSystem:
         door_name = event_data.get('door', 'unknown')
         timestamp = event_data.get('timestamp', '')
         
-        self.logger.info(f"🚪 Phát hiện {door_name.upper()} được mở lúc {timestamp}")
+        self.logger.info("=" * 60)
+        self.logger.info(f"🚪 PHÁT HIỆN {door_name.upper()} ĐƯỢC MỞ!")
+        self.logger.info(f"📅 Thời gian: {timestamp}")
+        self.logger.info("=" * 60)
         
-        # 1. Gửi yêu cầu chụp ảnh đến ESP32
-        self.logger.info(f"📸 Gửi yêu cầu chụp ảnh cho {door_name}...")
+        # Bước 1: Gửi yêu cầu chụp ảnh đến ESP32-CAM
+        self.logger.info(f"📸 Bước 1: Gửi yêu cầu chụp ảnh cho {door_name}...")
         
         image_result = self.camera_client.capture_image(door_name=door_name)
         
         if image_result and image_result.get('success'):
-            self.logger.info(f"✅ Đã nhận ảnh: {image_result['filename']}")
+            # Bước 2: Đã nhận và lưu ảnh thành công
+            self.logger.info(f"✅ Bước 2: Đã nhận và lưu ảnh thành công!")
+            self.logger.info(f"   📁 File: {image_result['filename']}")
+            self.logger.info(f"   📍 Path: {image_result['image_path']}")
+            self.logger.info(f"   📏 Size: {image_result['size']} bytes")
             
-            # 2. Chuẩn bị dữ liệu thông báo
+            # Bước 3: Chuẩn bị dữ liệu thông báo
             notification_data = {
                 'door': door_name,
                 'status': 'open',
@@ -199,16 +215,19 @@ class SmartHomeSystem:
                 'image_size': image_result['size']
             }
             
-            # 3. Gửi thông báo đến web
-            self.logger.info("📤 Gửi thông báo đến web server...")
+            # Bước 4: Gửi thông báo đến web
+            self.logger.info("📤 Bước 3: Gửi thông báo đến web server...")
             
             if self.web_notifier.send_notification(notification_data):
-                self.logger.info("✅ Đã gửi thông báo thành công")
+                self.logger.info("✅ Hoàn tất! Đã gửi thông báo thành công")
             else:
                 self.logger.error("❌ Không thể gửi thông báo đến web")
+                
         else:
-            error_msg = image_result.get('error', 'Unknown error') if image_result else 'No response'
-            self.logger.error(f"❌ Không thể chụp ảnh: {error_msg}")
+            # Lỗi khi chụp ảnh
+            error_msg = image_result.get('error', 'Unknown error') if image_result else 'No response from ESP32'
+            self.logger.error(f"❌ Không thể chụp ảnh từ ESP32-CAM!")
+            self.logger.error(f"   Lỗi: {error_msg}")
             
             # Vẫn gửi thông báo nhưng không có ảnh
             notification_data = {
@@ -218,7 +237,11 @@ class SmartHomeSystem:
                 'image_filename': None,
                 'error': error_msg
             }
+            
+            self.logger.info("📤 Gửi thông báo (không có ảnh)...")
             self.web_notifier.send_notification(notification_data)
+        
+        self.logger.info("=" * 60)
     
     def _signal_handler(self, signum, frame):
         """Xử lý signal để dừng hệ thống một cách graceful"""

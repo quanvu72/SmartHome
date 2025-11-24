@@ -94,19 +94,23 @@ class DoorSensorMonitor:
             self.logger.info(f"Trạng thái ban đầu - Door1: {self.door_states['door1']}, Door2: {self.door_states['door2']}")
             
             # Setup event detection với debouncing
+            # GPIO.RISING: phát hiện khi GPIO chuyển từ LOW (0) sang HIGH (1)
+            # Tức là khi cửa chuyển từ ĐÓNG sang MỞ
             GPIO.add_event_detect(
                 self.door1_pin,
                 GPIO.RISING,  # Phát hiện khi cửa mở (LOW -> HIGH)
                 callback=lambda channel: self._door_callback('door1', channel),
-                bouncetime=300  # 300ms debounce
+                bouncetime=500  # 500ms debounce để tránh nhiễu
             )
             
             GPIO.add_event_detect(
                 self.door2_pin,
                 GPIO.RISING,
                 callback=lambda channel: self._door_callback('door2', channel),
-                bouncetime=300
+                bouncetime=500
             )
+            
+            self.logger.info("✅ Đã setup event detection cho cả 2 cửa")
             
         except Exception as e:
             self.logger.error(f"Lỗi khi setup GPIO: {e}")
@@ -114,7 +118,11 @@ class DoorSensorMonitor:
     
     def _read_door_state(self, pin: int) -> str:
         """
-        Đọc trạng thái cửa từ GPIO pin
+        Đọc trạng thái cảm biến MC-38 từ GPIO pin
+        
+        MC-38 Reed Switch Logic:
+        - GPIO HIGH (1) = mạch hở = magnet xa = Cửa MỞ
+        - GPIO LOW (0) = mạch đóng = magnet gần = Cửa ĐÓNG
         
         Args:
             pin: GPIO pin number
@@ -123,42 +131,50 @@ class DoorSensorMonitor:
             'open' hoặc 'closed'
         """
         state = GPIO.input(pin)
-        # HIGH (1) = cửa mở, LOW (0) = cửa đóng
+        # HIGH (1) = cửa mở, LOW (0) = cửa đóng (giống test_sensor.py)
         return 'open' if state == 1 else 'closed'
     
     def _door_callback(self, door_name: str, channel: int):
         """
-        Callback khi phát hiện thay đổi trạng thái cửa
+        Callback khi phát hiện cửa mở (GPIO RISING: LOW -> HIGH)
         
         Args:
             door_name: Tên cửa ('door1' hoặc 'door2')
             channel: GPIO channel
         """
+        # Đợi một chút để đảm bảo tín hiệu ổn định
+        time.sleep(0.05)
+        
         # Đọc trạng thái mới
         new_state = self._read_door_state(channel)
         old_state = self.door_states[door_name]
         
-        # Chỉ xử lý nếu trạng thái thay đổi
-        if new_state != old_state:
-            self.door_states[door_name] = new_state
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        self.logger.info(f"[{timestamp}] 🚪 {door_name.upper()} phát hiện RISING edge: {old_state} -> {new_state}")
+        
+        # Cập nhật trạng thái
+        self.door_states[door_name] = new_state
+        
+        # Chỉ xử lý khi cửa thực sự MỞ (HIGH)
+        if new_state == 'open':
+            self.logger.info(f"✅ {door_name.upper()} được mở! Gọi callback...")
             
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            event_data = {
+                'door': door_name,
+                'status': new_state,
+                'timestamp': timestamp,
+                'pin': channel
+            }
             
-            self.logger.info(f"[{timestamp}] {door_name.upper()} thay đổi: {old_state} -> {new_state}")
-            
-            # Gọi callback nếu có
-            if self.callback and new_state == 'open':
-                event_data = {
-                    'door': door_name,
-                    'status': new_state,
-                    'timestamp': timestamp,
-                    'pin': channel
-                }
-                
+            # Gọi callback để chụp ảnh
+            if self.callback:
                 try:
                     self.callback(event_data)
                 except Exception as e:
-                    self.logger.error(f"Lỗi khi gọi callback: {e}")
+                    self.logger.error(f"❌ Lỗi khi gọi callback: {e}")
+        else:
+            self.logger.warning(f"⚠️ RISING edge nhưng trạng thái vẫn là closed (có thể nhiễu)")
     
     def get_door_states(self) -> Dict[str, str]:
         """
