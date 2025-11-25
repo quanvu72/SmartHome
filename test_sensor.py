@@ -1,6 +1,6 @@
 """
 Smart Home Door Sensor System
-Giám sát cảm biến MC-38 → Gửi lệnh ESP32 chụp ảnh → Nhận ảnh → Lưu file
+Giám sát cảm biến MC-38 → Gửi lệnh ESP32 chụp ảnh → ESP32 gửi ảnh đến test_recieve.py
 """
 
 import time
@@ -50,9 +50,8 @@ ESP32_IP = "192.168.1.13"  # IP của ESP32-CAM
 ESP32_PORT = 80
 ESP32_CAPTURE_URL = f"http://{ESP32_IP}:{ESP32_PORT}/capture"
 
-# Image save folder
-IMAGE_FOLDER = Path("images")
-IMAGE_FOLDER.mkdir(parents=True, exist_ok=True)
+# Note: Ảnh sẽ được lưu bởi test_recieve.py, không cần folder ở đây
+# Image save folder (not used anymore - images saved by test_recieve.py)
 
 # Trạng thái cửa
 door_states = {
@@ -63,47 +62,33 @@ door_states = {
 
 def request_esp32_capture(door_name):
     """
-    Gửi lệnh đến ESP32 để chụp ảnh và nhận ảnh về
+    Gửi lệnh đến ESP32 để chụp ảnh
+    ESP32 sẽ tự động gửi ảnh đến test_recieve.py
     
     Returns:
-        dict: Thông tin ảnh nếu thành công, None nếu thất bại
+        dict: Thông tin response nếu thành công, None nếu thất bại
     """
-    print(f"📸 Gửi yêu cầu chụp ảnh đến ESP32-CAM ({ESP32_IP})...")
+    print(f"📸 Gửi lệnh chụp ảnh đến ESP32-CAM ({ESP32_IP})...")
     
     try:
         # Gửi GET request đến ESP32 /capture endpoint
-        response = requests.get(ESP32_CAPTURE_URL, timeout=10)
+        # ESP32 sẽ chụp ảnh và gửi đến test_recieve.py
+        response = requests.get(ESP32_CAPTURE_URL, timeout=15)
         
         if response.status_code == 200:
-            # Nhận được ảnh
-            image_data = response.content
-            
-            # Tạo tên file với timestamp
-            timestamp = datetime.now()
-            filename = f"{door_name}_{timestamp.strftime('%Y%m%d_%H%M%S')}.jpg"
-            filepath = IMAGE_FOLDER / filename
-            
-            # Lưu ảnh
-            with open(filepath, 'wb') as f:
-                f.write(image_data)
-            
-            file_size = len(image_data)
-            
-            print("="*60)
-            print(f"✅ ĐÃ NHẬN VÀ LƯU ẢNH THÀNH CÔNG!")
-            print(f"📁 File: {filename}")
-            print(f"📍 Path: {filepath.absolute()}")
-            print(f"📏 Size: {file_size} bytes ({file_size/1024:.2f} KB)")
-            print(f"⏰ Time: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
-            print("="*60)
-            
-            return {
-                'success': True,
-                'filename': filename,
-                'filepath': str(filepath.absolute()),
-                'size': file_size,
-                'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S')
-            }
+            try:
+                result = response.json()
+                print("="*60)
+                print(f"✅ ESP32 ĐÃ CHỤP VÀ GỬI ẢNH!")
+                print(f"📤 ESP32 đã gửi ảnh đến test_recieve.py")
+                print(f"🖥️  Server: {result.get('uploaded_to', 'N/A')}")
+                print(f"📏 Size: {result.get('size', 0)} bytes")
+                print("="*60)
+                return result
+            except:
+                # Response không phải JSON, vẫn coi là thành công
+                print("✅ ESP32 đã nhận lệnh chụp ảnh")
+                return {'success': True}
         else:
             print(f"❌ ESP32 trả về lỗi: HTTP {response.status_code}")
             return None
@@ -148,10 +133,10 @@ def monitor_door_sensors():
     print("\n" + "="*60)
     print("🏠 SMART HOME DOOR MONITORING SYSTEM")
     print("="*60)
-    print(f"🚪 Door 1: GPIO {DOOR1_PIN}")
+    print("🚪 Door 1: GPIO {DOOR1_PIN}")
     print(f"🚪 Door 2: GPIO {DOOR2_PIN}")
     print(f"📷 ESP32-CAM: {ESP32_IP}")
-    print(f"💾 Image folder: {IMAGE_FOLDER.absolute()}")
+    print(f"💾 Images saved by: test_recieve.py (port 5000)")
     
     if MOCK_MODE:
         print("\n⚠️  RUNNING IN MOCK MODE (Simulation)")
@@ -197,9 +182,9 @@ def monitor_door_sensors():
                 result = request_esp32_capture('door1')
                 
                 if result:
-                    print(f"✅ Workflow hoàn tất: Phát hiện cửa → Chụp ảnh → Lưu file")
+                    print(f"✅ Workflow hoàn tất: Phát hiện cửa → ESP32 chụp → Gửi đến test_recieve.py")
                 else:
-                    print(f"⚠️  Không thể lấy ảnh từ ESP32")
+                    print(f"⚠️  ESP32 không phản hồi")
                 
                 print()
                 
@@ -216,9 +201,9 @@ def monitor_door_sensors():
                 result = request_esp32_capture('door2')
                 
                 if result:
-                    print(f"✅ Workflow hoàn tất: Phát hiện cửa → Chụp ảnh → Lưu file")
+                    print(f"✅ Workflow hoàn tất: Phát hiện cửa → ESP32 chụp → Gửi đến test_recieve.py")
                 else:
-                    print(f"⚠️  Không thể lấy ảnh từ ESP32")
+                    print(f"⚠️  ESP32 không phản hồi")
                 
                 print()
                 
@@ -237,16 +222,10 @@ def monitor_door_sensors():
         GPIO.cleanup()
         print("✅ Đã cleanup GPIO")
         
-        # Hiển thị tổng kết
-        images = list(IMAGE_FOLDER.glob('*.jpg'))
         print(f"\n📊 Tổng kết:")
-        print(f"   Số ảnh đã lưu: {len(images)}")
-        if images:
-            print(f"   Thư mục: {IMAGE_FOLDER.absolute()}")
-            print(f"   Ảnh mới nhất:")
-            for img in sorted(images)[-3:]:
-                size_kb = img.stat().st_size / 1024
-                print(f"      - {img.name} ({size_kb:.1f} KB)")
+        print(f"   Tổng số lệnh chụp ảnh đã gửi: Xem log trên")
+        print(f"   Ảnh được lưu bởi: test_recieve.py")
+        print(f"   Kiểm tra: images/ folder trên Raspberry Pi")
 
 
 if __name__ == '__main__':
