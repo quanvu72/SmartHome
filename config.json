@@ -5,10 +5,14 @@
     "description": "GPIO pins cho 2 cảm biến cửa (BCM numbering)"
   },
   "esp32": {
-    "ip": "192.168.1.100",
+    "ip": "192.168.1.13",
     "port": 80,
-    "timeout": 10,
+    "timeout": 15,
     "description": "Cấu hình ESP32-CAM (thay đổi IP theo thiết bị của bạn)"
+  },
+  "camera": {
+    "mode": "manual",
+    "description": "Che do camera: auto (tu dong chup khi cua mo) hoac manual (chi chup khi bam nut)"
   },
   "web_server": {
     "url": "http://localhost:3000/api/notification",
@@ -23,5 +27,11 @@
     "log_level": "INFO",
     "cleanup_images_days": 7,
     "description": "Cấu hình hệ thống chung"
+  },
+  "dashboard": {
+    "enabled": true,
+    "host": "0.0.0.0",
+    "port": 8080,
+    "description": "Cấu hình web dashboard"
   }
 }

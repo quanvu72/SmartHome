@@ -41,13 +41,14 @@ logs/*.log
 *.log
 
 # Images (tùy chọn - có thể bỏ comment nếu không muốn commit ảnh)
-# images/*.jpg
-# images/*.jpeg
-# images/*.png
+images/*.jpg
+images/*.jpeg
+images/*.png
 
 # Config files với thông tin nhạy cảm (nếu có)
 # config.local.json
 # secrets.json
+users.json
 
 # OS
 Thumbs.db

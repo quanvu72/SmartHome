@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Smart Home Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .register-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .register-header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .register-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .register-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .register-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .register-btn:active {
+            transform: translateY(0);
+        }
+        
+        .register-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.show {
+            display: block;
+        }
+        
+        .message.error {
+            background: #fee;
+            color: #c33;
+        }
+        
+        .message.success {
+            background: #efe;
+            color: #3c3;
+        }
+        
+        .footer-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <h1>Tao tai khoan moi</h1>
+            <p>Dang ky de truy cap Smart Home Dashboard</p>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="username">Ten dang nhap *</label>
+                <input type="text" id="username" name="username" required 
+                       autocomplete="username" minlength="3" maxlength="20"
+                       pattern="[a-zA-Z0-9_]+" 
+                       title="Chi cho phep chu cai, so va dau gach duoi">
+                <div class="help-text">3-20 ky tu, chi chu cai, so va dau gach duoi</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Mat khau *</label>
+                <input type="password" id="password" name="password" required 
+                       autocomplete="new-password" minlength="6">
+                <div class="help-text">Toi thieu 6 ky tu</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Xac nhan mat khau *</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required 
+                       autocomplete="new-password" minlength="6">
+            </div>
+            
+            <div class="form-group">
+                <label for="role">Vai tro</label>
+                <select id="role" name="role">
+                    <option value="user">User - Nguoi dung thong thuong</option>
+                    <option value="admin">Admin - Quan tri vien</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="register-btn" id="submitBtn">Tao tai khoan</button>
+        </form>
+        
+        <div class="footer-links">
+            <a href="/login">Da co tai khoan? Dang nhap</a>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('registerForm');
+        const message = document.getElementById('message');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const role = document.getElementById('role').value;
+            
+            // Validate password match
+            if (password !== confirmPassword) {
+                showMessage('Mat khau xac nhan khong khop', 'error');
+                return;
+            }
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Dang xu ly...';
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password, role })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('Tao tai khoan thanh cong! Dang chuyen den trang dang nhap...', 'success');
+                    
+                    // Redirect to login after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    showMessage(data.error || 'Tao tai khoan that bai', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Tao tai khoan';
+                }
+            } catch (error) {
+                showMessage('Loi ket noi den server', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Tao tai khoan';
+            }
+        });
+        
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = 'message show ' + type;
+            
+            if (type === 'error') {
+                setTimeout(() => {
+                    message.classList.remove('show');
+                }, 5000);
+            }
+        }
+        
+        // Real-time password match validation
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        confirmPasswordInput.addEventListener('input', () => {
+            const password = document.getElementById('password').value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                confirmPasswordInput.setCustomValidity('Mat khau khong khop');
+            } else {
+                confirmPasswordInput.setCustomValidity('');
+            }
+        });
+    </script>
+</body>
+</html>

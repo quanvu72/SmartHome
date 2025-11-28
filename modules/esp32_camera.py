@@ -80,63 +80,53 @@ class ESP32CameraClient:
             self.logger.error(f"Lỗi khi kiểm tra kết nối ESP32-CAM: {e}")
             return False
     
-    def capture_image(self, door_name: str = "door") -> Optional[Dict[str, str]]:
+    def request_capture(self, door_name: str = "door") -> Optional[Dict[str, str]]:
         """
-        Gửi yêu cầu chụp ảnh đến ESP32-CAM và lưu ảnh
+        Gửi lệnh chụp ảnh đến ESP32-CAM
+        ESP32 sẽ tự động chụp và gửi ảnh đến test_recieve.py
         
         Args:
-            door_name: Tên cửa để đặt tên file ảnh
+            door_name: Tên cửa (không sử dụng, chỉ để tương thích)
             
         Returns:
-            Dictionary chứa thông tin ảnh nếu thành công, None nếu thất bại
+            Dictionary chứa thông tin response nếu thành công, None nếu thất bại
             {
                 'success': True/False,
-                'image_path': '/path/to/image.jpg',
-                'filename': 'door1_20251118_103000.jpg',
-                'timestamp': '2025-11-18 10:30:00',
-                'size': 12345  # bytes
+                'uploaded_to': 'http://192.168.1.15:5000/upload',
+                'size': 12345,  # bytes
+                'error': 'error message'  # nếu có lỗi
             }
         """
         try:
-            self.logger.info(f"Gửi yêu cầu chụp ảnh đến ESP32-CAM ({door_name})...")
+            self.logger.info(f"Gửi lệnh chụp ảnh đến ESP32-CAM ({door_name})...")
             
             # Gửi GET request đến endpoint /capture
+            # ESP32 sẽ chụp ảnh và gửi đến test_recieve.py
             response = requests.get(
                 f"{self.base_url}/capture",
-                timeout=self.timeout,
-                stream=True  # Stream để xử lý file lớn
+                timeout=15  # Tăng timeout vì ESP32 cần thời gian chụp và upload
             )
             
             if response.status_code == 200:
-                # Kiểm tra content type
-                content_type = response.headers.get('Content-Type', '')
-                if 'image' not in content_type.lower():
-                    self.logger.warning(f"Response không phải là ảnh: {content_type}")
-                
-                # Tạo tên file với timestamp
-                timestamp = datetime.now()
-                filename = f"{door_name}_{timestamp.strftime('%Y%m%d_%H%M%S')}.jpg"
-                filepath = self.image_save_path / filename
-                
-                # Lưu ảnh
-                with open(filepath, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-                
-                # Lấy kích thước file
-                file_size = os.path.getsize(filepath)
-                
-                self.logger.info(f"✅ Đã lưu ảnh: {filename} ({file_size} bytes)")
-                
-                return {
-                    'success': True,
-                    'image_path': str(filepath.absolute()),
-                    'filename': filename,
-                    'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                    'size': file_size,
-                    'door': door_name
-                }
+                try:
+                    result = response.json()
+                    self.logger.info(f"✅ ESP32 đã chụp và gửi ảnh")
+                    self.logger.info(f"📤 Upload to: {result.get('uploaded_to', 'N/A')}")
+                    self.logger.info(f"📏 Size: {result.get('size', 0)} bytes")
+                    
+                    return {
+                        'success': True,
+                        'uploaded_to': result.get('uploaded_to', 'N/A'),
+                        'size': result.get('size', 0),
+                        'door': door_name
+                    }
+                except:
+                    # Response không phải JSON, vẫn coi là thành công
+                    self.logger.info("✅ ESP32 đã nhận lệnh chụp ảnh")
+                    return {
+                        'success': True,
+                        'door': door_name
+                    }
             else:
                 self.logger.error(f"ESP32-CAM trả về lỗi: {response.status_code}")
                 return {
@@ -146,26 +136,42 @@ class ESP32CameraClient:
                 }
                 
         except requests.exceptions.Timeout:
-            self.logger.error(f"Timeout khi chụp ảnh từ ESP32-CAM")
+            self.logger.error(f"Timeout khi gửi lệnh đến ESP32-CAM")
             return {
                 'success': False,
                 'error': 'Timeout',
                 'door': door_name
             }
         except requests.exceptions.ConnectionError:
-            self.logger.error(f"Không thể kết nối ESP32-CAM khi chụp ảnh")
+            self.logger.error(f"Không thể kết nối ESP32-CAM")
             return {
                 'success': False,
                 'error': 'Connection Error',
                 'door': door_name
             }
         except Exception as e:
-            self.logger.error(f"Lỗi khi chụp ảnh: {e}")
+            self.logger.error(f"Lỗi khi gửi lệnh chụp: {e}")
             return {
                 'success': False,
                 'error': str(e),
                 'door': door_name
             }
+    
+    def capture_image(self, door_name: str = "door") -> Optional[Dict[str, str]]:
+        """
+        [DEPRECATED] Method cũ - giữ lại để tương thích
+        Sử dụng request_capture() thay thế
+        
+        Gửi yêu cầu chụp ảnh đến ESP32-CAM và lưu ảnh
+        
+        Args:
+            door_name: Tên cửa để đặt tên file ảnh
+            
+        Returns:
+            Dictionary chứa thông tin ảnh nếu thành công, None nếu thất bại
+        """
+        self.logger.warning("capture_image() is deprecated, use request_capture() instead")
+        return self.request_capture(door_name)
     
     def get_camera_info(self) -> Optional[Dict]:
         """

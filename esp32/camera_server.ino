@@ -1,26 +1,30 @@
 /*
- * ESP32-CAM HTTP Server cho Smart Home System
- * Chức năng: Nhận yêu cầu HTTP từ Raspberry Pi và chụp ảnh
+ * ESP32-CAM cho Smart Home System
+ * Chức năng: Nhận lệnh chụp ảnh từ Raspberry Pi, sau đó gửi ảnh đến test_recieve.py
  * 
- * Hardware: ESP32-CAM (AI-Thinker)
- * Camera: OV2640
- * 
- * Endpoints:
- * - GET /capture : Chụp ảnh và trả về image
- * - GET /status  : Kiểm tra trạng thái
- * - GET /info    : Lấy thông tin camera
+ * Workflow:
+ * 1. Raspberry Pi gửi GET /capture
+ * 2. ESP32 chụp ảnh
+ * 3. ESP32 POST ảnh đến Raspberry Pi (test_recieve.py port 5000)
+ * 4. ESP32 trả response cho Raspberry Pi
  */
 
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <WebServer.h>
+#include <HTTPClient.h>
 
 // ===== CÀI ĐẶT WIFI =====
-const char* ssid = "YOUR_WIFI_SSID";           // Thay đổi tên WiFi
-const char* password = "YOUR_WIFI_PASSWORD";   // Thay đổi mật khẩu WiFi
+const char* ssid = "Tiramisu kem 2.4";
+const char* password = "08102004";
+
+// ===== CÀI ĐẶT RASPBERRY PI SERVER =====
+const char* raspberryPiIP = "192.168.1.11";  // IP của Raspberry Pi
+const int raspberryPiPort = 8080;            // Port của dashboard server
+const char* uploadPath = "/upload";
 
 // ===== CÀI ĐẶT WEB SERVER =====
-WebServer server(80);  // HTTP server trên port 80
+WebServer server(80);
 
 // ===== CAMERA PIN DEFINITION (AI-THINKER ESP32-CAM) =====
 #define PWDN_GPIO_NUM     32
@@ -73,11 +77,9 @@ bool initCamera() {
   config.pixel_format = PIXFORMAT_JPEG;
   
   // Cấu hình chất lượng ảnh
-  // Nếu có PSRAM: chất lượng cao
-  // Nếu không có PSRAM: chất lượng thấp hơn
   if(psramFound()){
     config.frame_size = FRAMESIZE_UXGA;  // 1600x1200
-    config.jpeg_quality = 10;             // 0-63, số thấp = chất lượng cao
+    config.jpeg_quality = 10;
     config.fb_count = 2;
     Serial.println("PSRAM found - High quality mode");
   } else {
@@ -97,100 +99,111 @@ bool initCamera() {
   // Cấu hình thêm cho camera sensor
   sensor_t * s = esp_camera_sensor_get();
   if (s != NULL) {
-    // Tùy chỉnh settings
-    s->set_brightness(s, 0);     // -2 to 2
-    s->set_contrast(s, 0);       // -2 to 2
-    s->set_saturation(s, 0);     // -2 to 2
-    s->set_special_effect(s, 0); // 0 to 6 (0 - No Effect)
-    s->set_whitebal(s, 1);       // 0 = disable , 1 = enable
-    s->set_awb_gain(s, 1);       // 0 = disable , 1 = enable
-    s->set_wb_mode(s, 0);        // 0 to 4 - if awb_gain enabled
-    s->set_exposure_ctrl(s, 1);  // 0 = disable , 1 = enable
-    s->set_aec2(s, 0);           // 0 = disable , 1 = enable
-    s->set_ae_level(s, 0);       // -2 to 2
-    s->set_aec_value(s, 300);    // 0 to 1200
-    s->set_gain_ctrl(s, 1);      // 0 = disable , 1 = enable
-    s->set_agc_gain(s, 0);       // 0 to 30
-    s->set_gainceiling(s, (gainceiling_t)0); // 0 to 6
-    s->set_bpc(s, 0);            // 0 = disable , 1 = enable
-    s->set_wpc(s, 1);            // 0 = disable , 1 = enable
-    s->set_raw_gma(s, 1);        // 0 = disable , 1 = enable
-    s->set_lenc(s, 1);           // 0 = disable , 1 = enable
-    s->set_hmirror(s, 0);        // 0 = disable , 1 = enable
-    s->set_vflip(s, 0);          // 0 = disable , 1 = enable
-    s->set_dcw(s, 1);            // 0 = disable , 1 = enable
-    s->set_colorbar(s, 0);       // 0 = disable , 1 = enable
+    s->set_brightness(s, 0);
+    s->set_contrast(s, 0);
+    s->set_saturation(s, 0);
+    s->set_whitebal(s, 1);
+    s->set_awb_gain(s, 1);
+    s->set_exposure_ctrl(s, 1);
+    s->set_gain_ctrl(s, 1);
   }
 
   Serial.println("Camera initialized successfully");
   return true;
 }
 
-// ===== KẾT NỐI WIFI =====
-void connectWiFi() {
-  Serial.println();
-  Serial.print("Connecting to WiFi: ");
-  Serial.println(ssid);
-  
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-    delay(500);
-    Serial.print(".");
-    attempts++;
+// ===== HÀM GỬI ẢNH ĐẾN RASPBERRY PI =====
+bool sendPhotoToRaspberryPi(camera_fb_t * fb) {
+  if (!fb) {
+    Serial.println("ERROR: No frame buffer provided");
+    return false;
   }
+
+  HTTPClient http;
   
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println();
-    Serial.println("WiFi connected!");
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
-    Serial.print("Signal strength (RSSI): ");
-    Serial.print(WiFi.RSSI());
-    Serial.println(" dBm");
+  // URL đầy đủ của test_recieve.py trên Raspberry Pi
+  String serverUrl = "http://" + String(raspberryPiIP) + ":" + String(raspberryPiPort) + String(uploadPath);
+  
+  Serial.println("\n--- Sending image to Raspberry Pi ---");
+  Serial.print("URL: ");
+  Serial.println(serverUrl);
+  Serial.printf("Image size: %d bytes (%.2f KB)\n", fb->len, fb->len/1024.0);
+  
+  http.begin(serverUrl);
+  http.addHeader("Content-Type", "image/jpeg");
+  http.setTimeout(15000); // 15 second timeout
+  
+  // Gửi dữ liệu ảnh
+  int httpResponseCode = http.POST(fb->buf, fb->len);
+  
+  if (httpResponseCode > 0) {
+    Serial.printf("POST successful! HTTP code: %d\n", httpResponseCode);
+    String response = http.getString();
+    Serial.println("Response from Raspberry Pi:");
+    Serial.println(response);
+    http.end();
+    return true;
   } else {
-    Serial.println();
-    Serial.println("WiFi connection failed!");
+    Serial.printf("POST failed! Error: %s\n", http.errorToString(httpResponseCode).c_str());
+    http.end();
+    return false;
   }
 }
 
 // ===== HANDLER: CAPTURE IMAGE =====
 void handleCapture() {
-  Serial.println("Received capture request");
+  Serial.println("\n╔════════════════════════════════════════════╗");
+  Serial.println("║  CAPTURE REQUEST from Raspberry Pi        ║");
+  Serial.println("╚════════════════════════════════════════════╝");
   requestCount++;
   
   if (!cameraInitialized) {
-    server.send(500, "text/plain", "Camera not initialized");
+    Serial.println("❌ Camera not initialized");
+    server.send(500, "application/json", "{\"success\":false,\"error\":\"Camera not initialized\"}");
     return;
   }
   
-  // Bật LED flash (optional)
+  // Bật LED flash
   digitalWrite(LED_GPIO_NUM, HIGH);
-  delay(100);  // Đợi LED sáng
+  delay(100);
   
   // Chụp ảnh
+  Serial.println("📸 Capturing image...");
   camera_fb_t * fb = esp_camera_fb_get();
   
   // Tắt LED flash
   digitalWrite(LED_GPIO_NUM, LOW);
   
   if (!fb) {
-    Serial.println("Camera capture failed");
-    server.send(500, "text/plain", "Camera capture failed");
+    Serial.println("❌ Camera capture failed");
+    server.send(500, "application/json", "{\"success\":false,\"error\":\"Camera capture failed\"}");
     return;
   }
   
-  Serial.printf("Image captured: %d bytes\n", fb->len);
+  Serial.printf("✅ Image captured: %d bytes (%.2f KB)\n", fb->len, fb->len/1024.0);
   
-  // Gửi ảnh về Raspberry Pi
-  server.send(200, "image/jpeg", (const char *)fb->buf, fb->len);
+  // Gửi ảnh đến Raspberry Pi (test_recieve.py)
+  bool uploadSuccess = sendPhotoToRaspberryPi(fb);
+  
+  // Trả response cho Raspberry Pi
+  if (uploadSuccess) {
+    String jsonResponse = "{";
+    jsonResponse += "\"success\":true,";
+    jsonResponse += "\"message\":\"Image captured and sent to Raspberry Pi\",";
+    jsonResponse += "\"size\":" + String(fb->len) + ",";
+    jsonResponse += "\"uploaded_to\":\"" + String(raspberryPiIP) + ":" + String(raspberryPiPort) + "\"";
+    jsonResponse += "}";
+    
+    server.send(200, "application/json", jsonResponse);
+    Serial.println("✅ Response sent to Raspberry Pi");
+  } else {
+    server.send(500, "application/json", "{\"success\":false,\"error\":\"Failed to upload to Raspberry Pi\"}");
+    Serial.println("❌ Failed to upload image");
+  }
   
   // Giải phóng bộ nhớ
   esp_camera_fb_return(fb);
-  
-  Serial.println("Image sent successfully");
+  Serial.println("╚════════════════════════════════════════════╝\n");
 }
 
 // ===== HANDLER: STATUS =====
@@ -205,23 +218,7 @@ void handleStatus() {
   status += "}";
   
   server.send(200, "application/json", status);
-}
-
-// ===== HANDLER: INFO =====
-void handleInfo() {
-  sensor_t * s = esp_camera_sensor_get();
-  
-  String info = "{\n";
-  info += "  \"device\": \"ESP32-CAM\",\n";
-  info += "  \"camera_model\": \"OV2640\",\n";
-  info += "  \"resolution\": \"" + String(s->status.framesize) + "\",\n";
-  info += "  \"quality\": \"" + String(s->status.quality) + "\",\n";
-  info += "  \"brightness\": \"" + String(s->status.brightness) + "\",\n";
-  info += "  \"contrast\": \"" + String(s->status.contrast) + "\",\n";
-  info += "  \"psram\": \"" + String(psramFound() ? "yes" : "no") + "\"\n";
-  info += "}";
-  
-  server.send(200, "application/json", info);
+  Serial.println("Status check from: " + server.client().remoteIP().toString());
 }
 
 // ===== HANDLER: ROOT =====
@@ -235,12 +232,16 @@ void handleRoot() {
   html += "<p><strong>IP:</strong> " + WiFi.localIP().toString() + "</p>";
   html += "<p><strong>Requests:</strong> " + String(requestCount) + "</p>";
   html += "<hr>";
+  html += "<h3>📋 Configuration:</h3>";
+  html += "<p><strong>Raspberry Pi:</strong> " + String(raspberryPiIP) + ":" + String(raspberryPiPort) + "</p>";
+  html += "<p><strong>Upload endpoint:</strong> " + String(uploadPath) + "</p>";
+  html += "<hr>";
   html += "<h3>API Endpoints:</h3>";
   html += "<ul>";
-  html += "<li><a href='/capture' target='_blank'>/capture</a> - Chụp ảnh</li>";
-  html += "<li><a href='/status' target='_blank'>/status</a> - Trạng thái hệ thống</li>";
-  html += "<li><a href='/info' target='_blank'>/info</a> - Thông tin camera</li>";
+  html += "<li><a href='/capture'>/capture</a> - Chụp và gửi ảnh đến Raspberry Pi</li>";
+  html += "<li><a href='/status'>/status</a> - Trạng thái hệ thống</li>";
   html += "</ul>";
+  html += "<p style='color: #888; font-size: 12px;'>Mode: Capture → Send to Raspberry Pi (test_recieve.py)</p>";
   html += "</body></html>";
   
   server.send(200, "text/html", html);
@@ -254,59 +255,117 @@ void handleNotFound() {
 // ===== SETUP =====
 void setup() {
   Serial.begin(115200);
-  Serial.println();
-  Serial.println("=================================");
-  Serial.println("  ESP32-CAM Smart Home System");
-  Serial.println("=================================");
   
   // Setup LED Flash pin
   pinMode(LED_GPIO_NUM, OUTPUT);
   digitalWrite(LED_GPIO_NUM, LOW);
   
   // Khởi tạo camera
-  Serial.println("Initializing camera...");
+  Serial.println("\n📷 Initializing camera...");
   cameraInitialized = initCamera();
   
   if (!cameraInitialized) {
-    Serial.println("Camera initialization failed!");
-    Serial.println("System will continue but capture will not work");
+    Serial.println("❌ Camera initialization failed!");
+  } else {
+    Serial.println("✅ Camera ready");
   }
   
-  // Kết nối WiFi
-  connectWiFi();
+  // Kết nối WiFi với Static IP
+  Serial.println("\n📡 Connecting to WiFi...");
   
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Cannot start server without WiFi");
+  // Cấu hình Static IP
+  IPAddress staticIP(192, 168, 1, 13);       // IP tĩnh cho ESP32
+  IPAddress gateway(192, 168, 1, 1);         // Gateway của router
+  IPAddress subnet(255, 255, 255, 0);        // Subnet mask
+  IPAddress primaryDNS(8, 8, 8, 8);          // DNS Google
+  IPAddress secondaryDNS(8, 8, 4, 4);        // DNS Google phụ
+  
+  // Áp dụng cấu hình Static IP
+  if (!WiFi.config(staticIP, gateway, subnet, primaryDNS, secondaryDNS)) {
+    Serial.println("⚠️  Failed to configure Static IP");
+  }
+  
+  WiFi.begin(ssid, password);
+  
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+    delay(500);
+    Serial.print(".");
+    attempts++;
+  }
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\n✅ WiFi connected!");
+    Serial.print("📍 ESP32 IP: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("📶 Signal: ");
+    Serial.print(WiFi.RSSI());
+    Serial.println(" dBm");
+  } else {
+    Serial.println("\n❌ WiFi connection failed!");
     return;
   }
+  
+  // Hiển thị cấu hình
+  Serial.println("\n⚙️  Configuration:");
+  Serial.print("   Raspberry Pi IP: ");
+  Serial.println(raspberryPiIP);
+  Serial.print("   Raspberry Pi Port: ");
+  Serial.println(raspberryPiPort);
+  Serial.print("   Upload Path: ");
+  Serial.println(uploadPath);
   
   // Setup HTTP routes
   server.on("/", HTTP_GET, handleRoot);
   server.on("/capture", HTTP_GET, handleCapture);
   server.on("/status", HTTP_GET, handleStatus);
-  server.on("/info", HTTP_GET, handleInfo);
   server.onNotFound(handleNotFound);
   
   // Khởi động server
   server.begin();
-  Serial.println("HTTP server started");
-  Serial.println("=================================");
-  Serial.print("Ready! Access at: http://");
-  Serial.println(WiFi.localIP());
-  Serial.println("=================================");
+  Serial.println("\n✅ HTTP server started");
+  Serial.println("╔═══════════════════════════════════════════╗");
+  Serial.println("║  Ready to receive requests!               ║");
+  Serial.print("║  Access: http://");
+  Serial.print(WiFi.localIP());
+  Serial.println("             ║");
+  Serial.println("╚═══════════════════════════════════════════╝\n");
+  
+  // Test chụp ảnh và gửi khi khởi động
+  Serial.println("🧪 STARTUP TEST: Capturing and sending test image...\n");
+  delay(2000);
+  
+  digitalWrite(LED_GPIO_NUM, HIGH);
+  delay(100);
+  camera_fb_t * fb = esp_camera_fb_get();
+  digitalWrite(LED_GPIO_NUM, LOW);
+  
+  if (fb) {
+    Serial.printf("📸 Test image captured: %d bytes\n", fb->len);
+    bool success = sendPhotoToRaspberryPi(fb);
+    esp_camera_fb_return(fb);
+    
+    if (success) {
+      Serial.println("✅ STARTUP TEST PASSED!\n");
+    } else {
+      Serial.println("⚠️  STARTUP TEST: Upload failed (check Raspberry Pi server)\n");
+    }
+  } else {
+    Serial.println("❌ STARTUP TEST: Capture failed\n");
+  }
 }
 
 // ===== LOOP =====
 void loop() {
-  // Xử lý HTTP requests
+  // Xử lý HTTP requests từ Raspberry Pi
   server.handleClient();
   
   // Kiểm tra kết nối WiFi
   static unsigned long lastCheck = 0;
-  if (millis() - lastCheck > 30000) {  // Kiểm tra mỗi 30 giây
+  if (millis() - lastCheck > 30000) {
     if (WiFi.status() != WL_CONNECTED) {
       Serial.println("WiFi disconnected! Reconnecting...");
-      connectWiFi();
+      WiFi.begin(ssid, password);
     }
     lastCheck = millis();
   }
