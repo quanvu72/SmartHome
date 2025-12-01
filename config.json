@@ -11,7 +11,7 @@
     "description": "Cấu hình ESP32-CAM (thay đổi IP theo thiết bị của bạn)"
   },
   "camera": {
-    "mode": "manual",
+    "mode": "auto",
     "description": "Che do camera: auto (tu dong chup khi cua mo) hoac manual (chi chup khi bam nut)"
   },
   "web_server": {

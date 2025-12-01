@@ -543,9 +543,9 @@
                 <div class="door-name">Cửa 1 (Door 1)</div>
                 <div class="door-status {{ door_states.door1.status }}" id="door1-status">
                     {% if door_states.door1.status == 'open' %}
-                        🔓 MỞ
+                        🔓 Đang mở
                     {% elif door_states.door1.status == 'closed' %}
-                        🔒 ĐÓNG
+                        🔒 Đang đóng
                     {% else %}
                         ❓ UNKNOWN
                     {% endif %}
@@ -562,9 +562,9 @@
                 <div class="door-name">Cửa 2 (Door 2)</div>
                 <div class="door-status {{ door_states.door2.status }}" id="door2-status">
                     {% if door_states.door2.status == 'open' %}
-                        🔓 MỞ
+                        🔓 Đang mở
                     {% elif door_states.door2.status == 'closed' %}
-                        🔒 ĐÓNG
+                        🔒 Đang đóng
                     {% else %}
                         ❓ UNKNOWN
                     {% endif %}
@@ -692,9 +692,9 @@
             
             // Update text
             if (data.status === 'open') {
-                statusDiv.innerHTML = '🔓 MỞ';
+                statusDiv.innerHTML = '🔓 Đang mở';
             } else if (data.status === 'closed') {
-                statusDiv.innerHTML = '🔒 ĐÓNG';
+                statusDiv.innerHTML = '🔒 Đang đóng';
             } else {
                 statusDiv.innerHTML = '❓ UNKNOWN';
             }
