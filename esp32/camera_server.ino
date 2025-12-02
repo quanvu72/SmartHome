@@ -167,7 +167,14 @@ void handleCapture() {
   digitalWrite(LED_GPIO_NUM, HIGH);
   delay(100);
   
-  // Chụp ảnh
+  // Xóa buffer cũ để đảm bảo chụp ảnh mới
+  camera_fb_t * fb_old = esp_camera_fb_get();
+  if (fb_old) {
+    esp_camera_fb_return(fb_old);
+    Serial.println("🗑️  Cleared old frame buffer");
+  }
+  
+  // Chụp ảnh mới
   Serial.println("📸 Capturing image...");
   camera_fb_t * fb = esp_camera_fb_get();
   
@@ -334,6 +341,12 @@ void setup() {
   // Test chụp ảnh và gửi khi khởi động
   Serial.println("🧪 STARTUP TEST: Capturing and sending test image...\n");
   delay(2000);
+  
+  // Xóa buffer cũ
+  camera_fb_t * fb_old = esp_camera_fb_get();
+  if (fb_old) {
+    esp_camera_fb_return(fb_old);
+  }
   
   digitalWrite(LED_GPIO_NUM, HIGH);
   delay(100);
