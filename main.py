@@ -341,6 +341,10 @@ class SmartHomeSystem:
         initial_states = self.door_monitor.get_door_states()
         self.logger.info(f"Trạng thái ban đầu: Door1={initial_states['door1']}, Door2={initial_states['door2']}")
         
+        # Gửi trạng thái ban đầu lên dashboard
+        self._update_dashboard('door1', initial_states['door1'])
+        self._update_dashboard('door2', initial_states['door2'])
+        
         # Main loop
         try:
             heartbeat_interval = 300  # 5 phút
