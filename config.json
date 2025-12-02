@@ -5,7 +5,7 @@
     "description": "GPIO pins cho 2 cảm biến cửa (BCM numbering)"
   },
   "esp32": {
-    "ip": "192.168.1.13",
+    "ip": "172.20.10.15",
     "port": 80,
     "timeout": 15,
     "description": "Cấu hình ESP32-CAM (thay đổi IP theo thiết bị của bạn)"

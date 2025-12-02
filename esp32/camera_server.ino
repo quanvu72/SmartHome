@@ -15,11 +15,11 @@
 #include <HTTPClient.h>
 
 // ===== CÀI ĐẶT WIFI =====
-const char* ssid = "Tiramisu kem 2.4";
-const char* password = "08102004";
+const char* ssid = "Quân????";
+const char* password = "qqqqqqqq";
 
 // ===== CÀI ĐẶT RASPBERRY PI SERVER =====
-const char* raspberryPiIP = "192.168.1.11";  // IP của Raspberry Pi
+const char* raspberryPiIP = "172.20.10.3";  // IP của Raspberry Pi
 const int raspberryPiPort = 8080;            // Port của dashboard server
 const char* uploadPath = "/upload";
 
@@ -274,8 +274,8 @@ void setup() {
   Serial.println("\n📡 Connecting to WiFi...");
   
   // Cấu hình Static IP
-  IPAddress staticIP(192, 168, 1, 13);       // IP tĩnh cho ESP32
-  IPAddress gateway(192, 168, 1, 1);         // Gateway của router
+  IPAddress staticIP(172, 20, 10, 5);        // IP tĩnh cho ESP32
+  IPAddress gateway(172, 20, 10, 1);         // Gateway của router
   IPAddress subnet(255, 255, 255, 0);        // Subnet mask
   IPAddress primaryDNS(8, 8, 8, 8);          // DNS Google
   IPAddress secondaryDNS(8, 8, 4, 4);        // DNS Google phụ
