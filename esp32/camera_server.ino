@@ -274,7 +274,7 @@ void setup() {
   Serial.println("\n📡 Connecting to WiFi...");
   
   // Cấu hình Static IP
-  IPAddress staticIP(172, 20, 10, 5);        // IP tĩnh cho ESP32
+  IPAddress staticIP(172, 20, 10, 5);       // IP tĩnh cho ESP32
   IPAddress gateway(172, 20, 10, 1);         // Gateway của router
   IPAddress subnet(255, 255, 255, 0);        // Subnet mask
   IPAddress primaryDNS(8, 8, 8, 8);          // DNS Google

@@ -97,7 +97,7 @@ class SmartHomeSystem:
                 "door2_pin": 27
             },
             "esp32": {
-                "ip": "192.168.1.13",
+                "ip": "172.20.10.5",
                 "port": 80,
                 "timeout": 15
             },
