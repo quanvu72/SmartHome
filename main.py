@@ -194,22 +194,28 @@ class SmartHomeSystem:
     
     def _on_door_opened(self, event_data: Dict):
         """
-        Callback khi phát hiện cửa được mở (GPIO HIGH)
-        Workflow: Phát hiện cửa mở → Gửi lệnh chụp → ESP32 tự gửi ảnh đến test_recieve.py
+        Callback khi phát hiện thay đổi trạng thái cửa (mở hoặc đóng)
         
         Args:
             event_data: Dictionary chứa thông tin sự kiện
         """
         door_name = event_data.get('door', 'unknown')
+        door_status = event_data.get('status', 'unknown')
         timestamp = event_data.get('timestamp', '')
         
         self.logger.info("=" * 60)
-        self.logger.info(f"Phat hien {door_name.upper()} duoc mo!")
+        self.logger.info(f"Phat hien {door_name.upper()} thay doi: {door_status.upper()}")
         self.logger.info(f"Thoi gian: {timestamp}")
         self.logger.info("=" * 60)
         
-        # Cập nhật dashboard nếu có
-        self._update_dashboard(door_name, 'open')
+        # Cập nhật dashboard với trạng thái thực tế
+        self._update_dashboard(door_name, door_status)
+        
+        # Chỉ chụp ảnh khi cửa MỞ
+        if door_status != 'open':
+            self.logger.info(f"Cua {door_name} dang {door_status} - Khong chup anh")
+            self.logger.info("=" * 60)
+            return
         
         # Kiem tra camera mode
         camera_config = self.config.get('camera', {})
