@@ -846,6 +846,7 @@
         
         // Start auto refresh on load
         window.addEventListener('load', () => {
+            refreshData();  // Gọi ngay lập tức
             startAutoRefresh();
             console.log('Dashboard loaded. Auto-refresh every 5 seconds.');
         });
