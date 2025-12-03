@@ -7,40 +7,7 @@ import time
 import logging
 from typing import Callable, Dict
 from datetime import datetime
-
-try:
-    import RPi.GPIO as GPIO
-except ImportError:
-    # Mock GPIO cho môi trường development không có Raspberry Pi
-    class MockGPIO:
-        BCM = "BCM"
-        IN = "IN"
-        PUD_UP = "PUD_UP"
-        RISING = "RISING"
-        FALLING = "FALLING"
-        
-        @staticmethod
-        def setmode(mode):
-            pass
-        
-        @staticmethod
-        def setup(pin, mode, pull_up_down=None):
-            pass
-        
-        @staticmethod
-        def input(pin):
-            return 1
-        
-        @staticmethod
-        def add_event_detect(pin, edge, callback=None, bouncetime=None):
-            pass
-        
-        @staticmethod
-        def cleanup():
-            pass
-    
-    GPIO = MockGPIO()
-    logging.warning("RPi.GPIO không khả dụng. Sử dụng Mock GPIO cho development.")
+import RPi.GPIO as GPIO
 
 
 class DoorSensorMonitor:
