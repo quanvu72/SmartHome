@@ -9,7 +9,6 @@ from typing import Callable, Dict
 from datetime import datetime
 import RPi.GPIO as GPIO
 
-
 class DoorSensorMonitor:
     """
     Class giám sát cảm biến cửa
