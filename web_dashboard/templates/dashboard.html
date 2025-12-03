@@ -530,9 +530,9 @@
             <div class="user-info">
                 <span class="user-name" onclick="window.location.href='/change-password'" style="cursor: pointer;" title="Click de doi mat khau">{{ user.username }}</span>
                 {% if user.role == 'admin' %}
-                <a href="/users" class="logout-btn" style="margin-right: 10px; text-decoration: none;">Quan ly Users</a>
+                <a href="/users" class="logout-btn" style="margin-right: 10px; text-decoration: none;">Quản lý Users</a>
                 {% endif %}
-                <button class="logout-btn" onclick="logout()">Dang xuat</button>
+                <button class="logout-btn" onclick="logout()">Đăng xuất</button>
             </div>
         </div>
         
@@ -863,7 +863,7 @@
         
         // Logout function
         function logout() {
-            if (confirm('Ban co chac muon dang xuat?')) {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
                 window.location.href = '/logout';
             }
         }
@@ -939,10 +939,10 @@
             statusDot.className = 'status-dot status-on';
             
             if (selectedMode === 'auto') {
-                statusText.textContent = 'Che do: Tu dong';
+                statusText.textContent = 'Chế độ: Tự động';
                 manualControls.style.display = 'none';
             } else {
-                statusText.textContent = 'Che do: Thu cong';
+                statusText.textContent = 'Chế độ: Thủ công';
                 manualControls.style.display = 'block';
             }
         }
@@ -951,7 +951,7 @@
             try {
                 const btn = event.target;
                 btn.disabled = true;
-                btn.textContent = 'Dang chup...';
+                btn.textContent = 'Đang chụp...';
                 
                 const response = await fetch('/api/camera/capture', {
                     method: 'POST'
@@ -960,25 +960,25 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    btn.textContent = 'Chup thanh cong!';
+                    btn.textContent = 'Chụp thành công!';
                     setTimeout(() => {
-                        btn.textContent = 'Chup anh ngay';
+                        btn.textContent = 'Chụp ảnh ngay';
                         btn.disabled = false;
                     }, 2000);
                     
                     refreshData();
                 } else {
-                    btn.textContent = 'Loi: ' + (data.error || 'Unknown');
+                    btn.textContent = 'Lỗi: ' + (data.error || 'Unknown');
                     setTimeout(() => {
-                        btn.textContent = 'Chup anh ngay';
+                        btn.textContent = 'Chụp ảnh ngay';
                         btn.disabled = false;
                     }, 2000);
                 }
             } catch (error) {
                 console.error('Error capturing image:', error);
-                event.target.textContent = 'Loi ket noi';
+                event.target.textContent = 'Lỗi kết nối';
                 setTimeout(() => {
-                    event.target.textContent = 'Chup anh ngay';
+                    event.target.textContent = 'Chụp ảnh ngay';
                     event.target.disabled = false;
                 }, 2000);
             }
