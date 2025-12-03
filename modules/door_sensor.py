@@ -112,7 +112,7 @@ class DoorSensorMonitor:
                 bouncetime=500
             )
             
-            self.logger.info("✅ Đã setup event detection cho cả 2 cửa (phát hiện cả mở và đóng)")
+            self.logger.info("Đã setup event detection cho cả 2 cửa (phát hiện cả mở và đóng)")
             
         except Exception as e:
             self.logger.error(f"Lỗi khi setup GPIO: {e}")
@@ -153,7 +153,7 @@ class DoorSensorMonitor:
         
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        self.logger.info(f"[{timestamp}] 🚪 {door_name.upper()} thay đổi: {old_state} -> {new_state}")
+        self.logger.info(f"[{timestamp}] {door_name.upper()} thay đổi: {old_state} -> {new_state}")
         
         # Cập nhật trạng thái
         self.door_states[door_name] = new_state
@@ -167,16 +167,16 @@ class DoorSensorMonitor:
         }
         
         if new_state == 'open':
-            self.logger.info(f"✅ {door_name.upper()} được mở! Gọi callback...")
+            self.logger.info(f"{door_name.upper()} được mở! Gọi callback...")
         else:
-            self.logger.info(f"✅ {door_name.upper()} được đóng! Gọi callback...")
+            self.logger.info(f"{door_name.upper()} được đóng! Gọi callback...")
         
         # Gọi callback
         if self.callback:
             try:
                 self.callback(event_data)
             except Exception as e:
-                self.logger.error(f"❌ Lỗi khi gọi callback: {e}")
+                self.logger.error(f"Lỗi khi gọi callback: {e}")
     
     def get_door_states(self) -> Dict[str, str]:
         """
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     )
     
     def test_callback(event_data):
-        print(f"🚪 Cửa được mở: {event_data}")
+        print(f"Cửa được mở: {event_data}")
     
     # Test với GPIO pins mặc định
     with DoorSensorMonitor(door1_pin=17, door2_pin=27, callback=test_callback) as monitor:

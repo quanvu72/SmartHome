@@ -6,10 +6,8 @@ requests>=2.31.0
 # Flask web server (để nhận ảnh từ ESP32)
 flask>=3.0.0
 
-# GPIO control for Raspberry Pi (chỉ cần trên Raspberry Pi)
+# GPIO control for Raspberry Pi 
 # RPi.GPIO>=0.7.1
-
-# Optional: Thư viện bổ sung cho production
 
 # Logging nâng cao
 # python-json-logger>=2.0.7

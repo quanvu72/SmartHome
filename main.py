@@ -51,9 +51,7 @@ class SmartHomeSystem:
         # Setup logging
         self._setup_logging()
         
-        self.logger.info("=" * 60)
         self.logger.info("Smart Home Management System Starting...")
-        self.logger.info("=" * 60)
         
         # Khởi tạo các module
         self.door_monitor = None
@@ -150,9 +148,8 @@ class SmartHomeSystem:
             esp32_config = self.config.get('esp32', {})
             system_config = self.config.get('system', {})
             
-            # Note: image_save_path không còn dùng, ảnh được lưu bởi test_recieve.py
             self.camera_client = ESP32CameraClient(
-                esp32_ip=esp32_config.get('ip', '192.168.1.13'),
+                esp32_ip=esp32_config.get('ip', '172.20.10.5'),
                 esp32_port=esp32_config.get('port', 80),
                 image_save_path=system_config.get('image_path', 'images'),
                 timeout=esp32_config.get('timeout', 15)
@@ -160,14 +157,13 @@ class SmartHomeSystem:
             
             # Bo qua kiem tra ket noi ESP32 khi khoi dong
             self.logger.info(f"ESP32-CAM config: {esp32_config.get('ip')}:{esp32_config.get('port')}")
-            self.logger.info("   → Bo qua kiem tra ket noi (se kiem tra khi chup anh)")
             
             # 2. Khởi tạo Web Notifier
             self.logger.info("Khởi tạo Web Notifier...")
             web_config = self.config.get('web_server', {})
             
             if web_config.get('use_mock', False):
-                self.logger.info("   → Sử dụng Mock Web Notifier (không gửi HTTP thật)")
+                self.logger.info("   Sử dụng Mock Web Notifier")
                 self.web_notifier = MockWebNotifier()
             else:
                 self.web_notifier = WebNotifier(
@@ -203,10 +199,8 @@ class SmartHomeSystem:
         door_status = event_data.get('status', 'unknown')
         timestamp = event_data.get('timestamp', '')
         
-        self.logger.info("=" * 60)
         self.logger.info(f"Phat hien {door_name.upper()} thay doi: {door_status.upper()}")
         self.logger.info(f"Thoi gian: {timestamp}")
-        self.logger.info("=" * 60)
         
         # Cập nhật dashboard với trạng thái thực tế
         self._update_dashboard(door_name, door_status)
@@ -235,15 +229,13 @@ class SmartHomeSystem:
             return
         
         # Bước 1: Gửi lệnh chụp ảnh đến ESP32-CAM
-        # ESP32 sẽ tự động chụp và gửi ảnh đến test_recieve.py
         self.logger.info(f"Gui lenh chup anh cho {door_name} den ESP32-CAM...")
         
         capture_result = self.camera_client.request_capture(door_name=door_name)
         
         if capture_result and capture_result.get('success'):
-            # ESP32 đã nhận lệnh và sẽ gửi ảnh đến test_recieve.py
+            # Thành công
             self.logger.info(f"ESP32 đã nhận lệnh chụp ảnh")
-            self.logger.info(f"ESP32 đã gửi ảnh đến test_recieve.py")
             self.logger.info(f"Server: {capture_result.get('uploaded_to', 'N/A')}")
             self.logger.info(f"Size: {capture_result.get('size', 0)} bytes")
             
@@ -432,7 +424,7 @@ def main():
                 "door2_pin": 27
             },
             "esp32": {
-                "ip": "192.168.1.100",
+                "ip": "172.20.10.5",
                 "port": 80,
                 "timeout": 10
             },

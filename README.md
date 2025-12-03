@@ -139,7 +139,7 @@ Chỉnh sửa file `config.json`:
     "door2_pin": 27
   },
   "esp32": {
-    "ip": "192.168.1.100",
+    "ip": "172.20.10.5",
     "port": 80
   },
   "web_server": {

@@ -7,7 +7,7 @@ from pathlib import Path
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("🌐 Smart Home Web Dashboard (Test Mode)")
+    print("Smart Home Web Dashboard (Test Mode)")
     print("=" * 60)
     print()
     
@@ -22,7 +22,7 @@ if __name__ == '__main__':
         config_path='../config.json'
     )
     
-    print("\n💡 Tips:")
+    print("\nTips:")
     print("   - Mở browser: http://localhost:8080")
     print("   - Auto refresh: Mỗi 5 giây")
     print("   - Nhấn R: Refresh thủ công")

@@ -77,7 +77,7 @@ class WebNotifier:
                 )
                 
                 if response.status_code in [200, 201]:
-                    self.logger.info(f"✅ Đã gửi thông báo thành công đến web server")
+                    self.logger.info(f"Đã gửi thông báo thành công đến web server")
                     try:
                         response_data = response.json()
                         self.logger.debug(f"Response: {response_data}")
@@ -105,7 +105,7 @@ class WebNotifier:
                 import time
                 time.sleep(1)
         
-        self.logger.error(f"❌ Không thể gửi thông báo sau {self.retry_count} lần thử")
+        self.logger.error(f"Không thể gửi thông báo sau {self.retry_count} lần thử")
         return False
     
     def send_heartbeat(self) -> bool:
@@ -201,14 +201,14 @@ class WebNotifier:
             )
             
             if response.status_code == 200:
-                self.logger.info("Web API đang hoạt động")
+                self.logger.info("Web đang hoạt động")
                 return True
             else:
-                self.logger.warning(f"Web API trả về code: {response.status_code}")
+                self.logger.warning(f"Web trả về code: {response.status_code}")
                 return False
                 
         except Exception as e:
-            self.logger.error(f"Không thể kết nối Web API: {e}")
+            self.logger.error(f"Không thể kết nối Web: {e}")
             return False
 
 
@@ -228,7 +228,7 @@ class MockWebNotifier(WebNotifier):
             'timestamp': datetime.now().isoformat(),
             'data': event_data
         })
-        self.logger.info(f"📝 Mock: Đã lưu notification - {event_data.get('door')} {event_data.get('status')}")
+        self.logger.info(f"Mock: Đã lưu notification - {event_data.get('door')} {event_data.get('status')}")
         return True
     
     def send_heartbeat(self) -> bool:
@@ -271,7 +271,7 @@ if __name__ == "__main__":
     }
     
     if mock_notifier.send_notification(test_event):
-        print("✅ Mock notification gửi thành công")
+        print("Gửi thành công")
     
     print(f"\nDanh sách notifications: {len(mock_notifier.get_notifications())}")
     
@@ -284,7 +284,7 @@ if __name__ == "__main__":
     
     # Kiểm tra API health
     if real_notifier.check_api_health():
-        print("✅ Web API đang hoạt động")
+        print("Web đang hoạt động")
         real_notifier.send_notification(test_event)
     else:
-        print("⚠️  Web API không khả dụng (điều này bình thường nếu chưa setup server)")
+        print("Web không khả dụng")

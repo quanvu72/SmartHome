@@ -2,24 +2,24 @@
   "door_sensors": {
     "door1_pin": 17,
     "door2_pin": 27,
-    "description": "GPIO pins cho 2 cảm biến cửa (BCM numbering)"
+    "description": "GPIO pins cho 2 cảm biến cửa"
   },
   "esp32": {
     "ip": "172.20.10.5",
     "port": 80,
     "timeout": 15,
-    "description": "Cấu hình ESP32-CAM (thay đổi IP theo thiết bị của bạn)"
+    "description": "Cấu hình ESP32-CAM"
   },
   "camera": {
     "mode": "auto",
-    "description": "Che do camera: auto (tu dong chup khi cua mo) hoac manual (chi chup khi bam nut)"
+    "description": "Che do camera: auto hoac manual"
   },
   "web_server": {
     "url": "http://localhost:3000/api/notification",
     "timeout": 5,
     "retry_count": 3,
     "use_mock": true,
-    "description": "Cấu hình web server API. Đặt use_mock=false khi có server thật"
+    "description": "Cấu hình web server API"
   },
   "system": {
     "image_path": "images",

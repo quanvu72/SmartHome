@@ -112,13 +112,13 @@ class DashboardServer:
             config_file = Path(__file__).parent.parent / self.config_path
             with open(config_file, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-            logger.info(f"✅ Đã load config từ {config_file}")
+            logger.info(f"Đã load config từ {config_file}")
             return config
         except FileNotFoundError:
-            logger.warning("⚠️  Không tìm thấy config.json")
+            logger.warning("Không tìm thấy config.json")
             return {}
         except Exception as e:
-            logger.error(f"❌ Lỗi khi load config: {e}")
+            logger.error(f"Lỗi khi load config: {e}")
             return {}
     
     def _get_recent_images(self, limit: int = 10) -> List[Dict]:
@@ -404,7 +404,7 @@ class DashboardServer:
                     self.door_states[door]['last_updated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     self.stats['total_events'] += 1
                     
-                    logger.info(f"📊 Cập nhật trạng thái: {door} = {status}")
+                    logger.info(f"Cập nhật trạng thái: {door} = {status}")
                     
                     return jsonify({
                         'success': True,
@@ -549,11 +549,11 @@ class DashboardServer:
                 file_size = len(image_data)
                 
                 logger.info("="*60)
-                logger.info(f"✅ Da nhan anh tu ESP32-CAM!")
-                logger.info(f"📁 File: {filename}")
-                logger.info(f"📍 Path: {filepath}")
-                logger.info(f"📏 Size: {file_size} bytes ({file_size/1024:.2f} KB)")
-                logger.info(f"⏰ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                logger.info(f"Da nhan anh tu ESP32-CAM!")
+                logger.info(f"File: {filename}")
+                logger.info(f"Path: {filepath}")
+                logger.info(f"Size: {file_size} bytes ({file_size/1024:.2f} KB)")
+                logger.info(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 logger.info("="*60)
                 
                 # Cap nhat so luong anh
@@ -568,7 +568,7 @@ class DashboardServer:
                 }), 200
                 
             except Exception as e:
-                logger.error(f"❌ Loi khi nhan anh: {e}")
+                logger.error(f"Loi khi nhan anh: {e}")
                 return jsonify({
                     'success': False,
                     'error': str(e)
@@ -678,10 +678,10 @@ class DashboardServer:
             debug: Chế độ debug
         """
         logger.info("=" * 60)
-        logger.info("🌐 Starting Web Dashboard Server")
+        logger.info("Starting Web Dashboard Server")
         logger.info("=" * 60)
-        logger.info(f"📍 Dashboard URL: http://{self.host}:{self.port}")
-        logger.info(f"📁 Image folder: {self.image_folder.absolute()}")
+        logger.info(f"Dashboard URL: http://{self.host}:{self.port}")
+        logger.info(f"Image folder: {self.image_folder.absolute()}")
         logger.info("=" * 60)
         logger.info("Endpoints:")
         logger.info(f"  - GET  /                    : Dashboard UI")
@@ -701,16 +701,16 @@ class DashboardServer:
                 threaded=True
             )
         except KeyboardInterrupt:
-            logger.info("\n🛑 Dừng dashboard server...")
+            logger.info("\nDừng dashboard server...")
         except Exception as e:
-            logger.error(f"❌ Lỗi khi chạy server: {e}")
+            logger.error(f"Lỗi khi chạy server: {e}")
             raise
 
 
 def main():
     """Main entry point"""
     print("=" * 60)
-    print("🌐 Smart Home Web Dashboard")
+    print("Smart Home Web Dashboard")
     print("   Raspberry Pi 5 - ESP32-CAM")
     print("=" * 60)
     print()

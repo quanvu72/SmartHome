@@ -83,7 +83,6 @@ class ESP32CameraClient:
     def request_capture(self, door_name: str = "door") -> Optional[Dict[str, str]]:
         """
         Gửi lệnh chụp ảnh đến ESP32-CAM
-        ESP32 sẽ tự động chụp và gửi ảnh đến test_recieve.py
         
         Args:
             door_name: Tên cửa (không sử dụng, chỉ để tương thích)
@@ -101,7 +100,6 @@ class ESP32CameraClient:
             self.logger.info(f"Gửi lệnh chụp ảnh đến ESP32-CAM ({door_name})...")
             
             # Gửi GET request đến endpoint /capture
-            # ESP32 sẽ chụp ảnh và gửi đến test_recieve.py
             response = requests.get(
                 f"{self.base_url}/capture",
                 timeout=15  # Tăng timeout vì ESP32 cần thời gian chụp và upload
@@ -110,9 +108,9 @@ class ESP32CameraClient:
             if response.status_code == 200:
                 try:
                     result = response.json()
-                    self.logger.info(f"✅ ESP32 đã chụp và gửi ảnh")
-                    self.logger.info(f"📤 Upload to: {result.get('uploaded_to', 'N/A')}")
-                    self.logger.info(f"📏 Size: {result.get('size', 0)} bytes")
+                    self.logger.info(f"ESP32 đã chụp và gửi ảnh")
+                    self.logger.info(f"Upload to: {result.get('uploaded_to', 'N/A')}")
+                    self.logger.info(f"Size: {result.get('size', 0)} bytes")
                     
                     return {
                         'success': True,
@@ -122,7 +120,7 @@ class ESP32CameraClient:
                     }
                 except:
                     # Response không phải JSON, vẫn coi là thành công
-                    self.logger.info("✅ ESP32 đã nhận lệnh chụp ảnh")
+                    self.logger.info("ESP32 đã nhận lệnh chụp ảnh")
                     return {
                         'success': True,
                         'door': door_name
@@ -159,7 +157,6 @@ class ESP32CameraClient:
     
     def capture_image(self, door_name: str = "door") -> Optional[Dict[str, str]]:
         """
-        [DEPRECATED] Method cũ - giữ lại để tương thích
         Sử dụng request_capture() thay thế
         
         Gửi yêu cầu chụp ảnh đến ESP32-CAM và lưu ảnh
@@ -233,24 +230,24 @@ if __name__ == "__main__":
     
     # Tạo client
     client = ESP32CameraClient(
-        esp32_ip="192.168.1.100",
+        esp32_ip="172.20.10.5",
         esp32_port=80
     )
     
     # Test kết nối
     print("Kiểm tra kết nối...")
     if client.check_connection():
-        print("✅ Kết nối thành công!")
+        print("Kết nối thành công!")
         
         # Test chụp ảnh
         print("\nChụp ảnh test...")
         result = client.capture_image(door_name="test_door")
         
         if result and result.get('success'):
-            print(f"✅ Chụp ảnh thành công: {result['filename']}")
-            print(f"   Đường dẫn: {result['image_path']}")
-            print(f"   Kích thước: {result['size']} bytes")
+            print(f"Chụp ảnh thành công: {result['filename']}")
+            print(f"Đường dẫn: {result['image_path']}")
+            print(f"Kích thước: {result['size']} bytes")
         else:
-            print(f"❌ Chụp ảnh thất bại: {result.get('error', 'Unknown error')}")
+            print(f"Chụp ảnh thất bại: {result.get('error', 'Unknown error')}")
     else:
-        print("❌ Không thể kết nối ESP32-CAM")
+        print("Không thể kết nối ESP32-CAM")
