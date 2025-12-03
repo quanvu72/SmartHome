@@ -144,48 +144,48 @@
 <body>
     <div class="register-container">
         <div class="register-header">
-            <h1>Tao tai khoan moi</h1>
-            <p>Dang ky de truy cap Smart Home Dashboard</p>
+            <h1>Tạo tài khoản mới</h1>
+            <p>Đăng ký để truy cập Smart Home Dashboard</p>
         </div>
         
         <div class="message" id="message"></div>
         
         <form id="registerForm">
             <div class="form-group">
-                <label for="username">Ten dang nhap *</label>
+                <label for="username">Tên đăng nhập *</label>
                 <input type="text" id="username" name="username" required 
                        autocomplete="username" minlength="3" maxlength="20"
                        pattern="[a-zA-Z0-9_]+" 
-                       title="Chi cho phep chu cai, so va dau gach duoi">
-                <div class="help-text">3-20 ky tu, chi chu cai, so va dau gach duoi</div>
+                       title="Chỉ cho phép chữ cái, số và dấu gạch dưới">
+                <div class="help-text">3-20 ký tự, chỉ chữ cái, số và dấu gạch dưới</div>
             </div>
             
             <div class="form-group">
-                <label for="password">Mat khau *</label>
+                <label for="password">Mật khẩu *</label>
                 <input type="password" id="password" name="password" required 
                        autocomplete="new-password" minlength="6">
-                <div class="help-text">Toi thieu 6 ky tu</div>
+                <div class="help-text">Tối thiểu 6 ký tự</div>
             </div>
             
             <div class="form-group">
-                <label for="confirmPassword">Xac nhan mat khau *</label>
+                <label for="confirmPassword">Xác nhận mật khẩu *</label>
                 <input type="password" id="confirmPassword" name="confirmPassword" required 
                        autocomplete="new-password" minlength="6">
             </div>
             
             <div class="form-group">
-                <label for="role">Vai tro</label>
+                <label for="role">Vai trò</label>
                 <select id="role" name="role">
-                    <option value="user">User - Nguoi dung thong thuong</option>
-                    <option value="admin">Admin - Quan tri vien</option>
+                    <option value="user">User - Người dùng thông thường</option>
+                    <option value="admin">Admin - Quản trị viên</option>
                 </select>
             </div>
             
-            <button type="submit" class="register-btn" id="submitBtn">Tao tai khoan</button>
+            <button type="submit" class="register-btn" id="submitBtn">Tạo tài khoản</button>
         </form>
         
         <div class="footer-links">
-            <a href="/login">Da co tai khoan? Dang nhap</a>
+            <a href="/login">Đã có tài khoản? Đăng nhập</a>
         </div>
     </div>
     
@@ -204,13 +204,13 @@
             
             // Validate password match
             if (password !== confirmPassword) {
-                showMessage('Mat khau xac nhan khong khop', 'error');
+                showMessage('Mật khẩu xác nhận không khớp', 'error');
                 return;
             }
             
             // Disable submit button
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Dang xu ly...';
+            submitBtn.textContent = 'Đang xử lý...';
             
             try {
                 const response = await fetch('/api/auth/register', {
@@ -224,21 +224,21 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    showMessage('Tao tai khoan thanh cong! Dang chuyen den trang dang nhap...', 'success');
+                    showMessage('Tạo tài khoản thành công! Đang chuyển đến trang đăng nhập...', 'success');
                     
                     // Redirect to login after 2 seconds
                     setTimeout(() => {
                         window.location.href = '/login';
                     }, 2000);
                 } else {
-                    showMessage(data.error || 'Tao tai khoan that bai', 'error');
+                    showMessage(data.error || 'Tạo tài khoản thất bại', 'error');
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Tao tai khoan';
+                    submitBtn.textContent = 'Tạo tài khoản';
                 }
             } catch (error) {
-                showMessage('Loi ket noi den server', 'error');
+                showMessage('Lỗi kết nối đến server', 'error');
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Tao tai khoan';
+                submitBtn.textContent = 'Tạo tài khoản';
             }
         });
         
@@ -260,7 +260,7 @@
             const confirmPassword = confirmPasswordInput.value;
             
             if (confirmPassword && password !== confirmPassword) {
-                confirmPasswordInput.setCustomValidity('Mat khau khong khop');
+                confirmPasswordInput.setCustomValidity('Mật khẩu không khớp');
             } else {
                 confirmPasswordInput.setCustomValidity('');
             }

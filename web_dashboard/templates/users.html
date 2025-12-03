@@ -152,31 +152,31 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Quan ly nguoi dung</h1>
+            <h1>Quản lý người dùng</h1>
             <div style="display: flex; gap: 10px;">
-                <a href="/" class="btn btn-secondary">Quay lai Dashboard</a>
-                <a href="/register" class="btn btn-primary">Them nguoi dung moi</a>
+                <a href="/" class="btn btn-secondary">Quay lại Dashboard</a>
+                <a href="/register" class="btn btn-primary">Thêm người dùng mới</a>
             </div>
         </div>
         
         <div class="message" id="message"></div>
         
         <div class="users-card">
-            <h2>Danh sach nguoi dung</h2>
+            <h2>Danh sách người dùng</h2>
             <table class="users-table" id="usersTable">
                 <thead>
                     <tr>
                         <th>Username</th>
-                        <th>Vai tro</th>
-                        <th>Ngay tao</th>
-                        <th>Cap nhat</th>
-                        <th>Thao tac</th>
+                        <th>Vai trò</th>
+                        <th>Ngày tạo</th>
+                        <th>Cập nhật</th>
+                        <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
                     <tr>
                         <td colspan="5" style="text-align: center; padding: 20px;">
-                            Dang tai...
+                            Đang tải...
                         </td>
                     </tr>
                 </tbody>
@@ -203,7 +203,7 @@
                     currentUser = data.current_user || null;
                 }
             } catch (error) {
-                console.error('Loi khi tai thong tin user:', error);
+                console.error('Lỗi khi tải thông tin user:', error);
             }
         }
         
@@ -215,10 +215,10 @@
                 if (data.success) {
                     displayUsers(data.users);
                 } else {
-                    showMessage('Loi khi tai danh sach nguoi dung', 'error');
+                    showMessage('Lỗi khi tải danh sách người dùng', 'error');
                 }
             } catch (error) {
-                showMessage('Loi ket noi den server', 'error');
+                showMessage('Lỗi kết nối đến server', 'error');
             }
         }
         
@@ -226,7 +226,7 @@
             const tbody = document.getElementById('usersTableBody');
             
             if (Object.keys(users).length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Chua co nguoi dung nao</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Chưa có người dùng nào</td></tr>';
                 return;
             }
             
@@ -263,7 +263,7 @@
         }
         
         async function deleteUser(username) {
-            if (!confirm(`Ban co chac chan muon xoa nguoi dung "${username}"?`)) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa người dùng "${username}"?`)) {
                 return;
             }
             
@@ -275,18 +275,18 @@
                 const data = await response.json();
                 
                 if (response.status === 403) {
-                    showMessage('Ban khong co quyen xoa nguoi dung (chi admin)', 'error');
+                    showMessage('Bạn không có quyền xóa người dùng (chỉ admin)', 'error');
                     return;
                 }
                 
                 if (data.success) {
-                    showMessage(`Da xoa nguoi dung "${username}"`, 'success');
+                    showMessage(`Đã xóa người dùng "${username}"`, 'success');
                     loadUsers(); // Reload table
                 } else {
-                    showMessage(data.error || 'Loi khi xoa nguoi dung', 'error');
+                    showMessage(data.error || 'Lỗi khi xóa người dùng', 'error');
                 }
             } catch (error) {
-                showMessage('Loi ket noi den server', 'error');
+                showMessage('Lỗi kết nối đến server', 'error');
             }
         }
         
