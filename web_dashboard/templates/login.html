@@ -137,28 +137,28 @@
         </div>
         <div class="login-header">
             <h1>Smart Home Dashboard</h1>
-            <p>Dang nhap de truy cap he thong</p>
+            <p>Đăng nhập để truy cập hệ thống</p>
         </div>
         
         <div class="error-message" id="errorMessage"></div>
         
         <form id="loginForm">
             <div class="form-group">
-                <label for="username">Ten dang nhap</label>
+                <label for="username">Tên đăng nhập</label>
                 <input type="text" id="username" name="username" required autocomplete="username">
             </div>
             
             <div class="form-group">
-                <label for="password">Mat khau</label>
+                <label for="password">Mật khẩu</label>
                 <input type="password" id="password" name="password" required autocomplete="current-password">
             </div>
             
-            <button type="submit" class="login-btn">Dang nhap</button>
+            <button type="submit" class="login-btn">Đăng nhập</button>
         </form>
         
         <div class="footer-note">
             <a href="/register" style="color: #1488DB; text-decoration: none; margin-top: 10px; display: inline-block;">
-                Chua co tai khoan? Dang ky tai day
+                Chưa có tài khoản? Đăng ký tại đây
             </a>
         </div>
     </div>
@@ -191,7 +191,7 @@
                     // Redirect den dashboard
                     window.location.href = '/';
                 } else {
-                    errorMessage.textContent = data.error || 'Dang nhap that bai';
+                    errorMessage.textContent = data.error || 'Đăng nhập thất bại';
                     errorMessage.classList.add('show');
                     
                     setTimeout(() => {
@@ -199,7 +199,7 @@
                     }, 3000);
                 }
             } catch (error) {
-                errorMessage.textContent = 'Loi ket noi den server';
+                errorMessage.textContent = 'Lỗi kết nối đến server';
                 errorMessage.classList.add('show');
                 
                 setTimeout(() => {
