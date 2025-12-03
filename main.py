@@ -205,19 +205,26 @@ class SmartHomeSystem:
         # Cập nhật dashboard với trạng thái thực tế
         self._update_dashboard(door_name, door_status)
         
-        # Kiem tra camera mode TRUOC khi check status
+        # Chỉ chụp ảnh khi cửa MỞ
+        if door_status != 'open':
+            self.logger.info(f"Cua {door_name} dang {door_status} - Khong chup anh")
+            self.logger.info("=" * 60)
+            return
+        
+        # Kiem tra camera mode
         camera_config = self.config.get('camera', {})
         camera_mode = camera_config.get('mode', 'auto')
         
         if camera_mode != 'auto':
-            # Che do manual: KHONG chup anh tu dong khi cua mo
             self.logger.info(f"Camera che do {camera_mode} - Bo qua chup anh tu dong")
-            self.logger.info("=" * 60)
-            return
-        
-        # Che do auto: Chi chup anh khi cua MO
-        if door_status != 'open':
-            self.logger.info(f"Cua {door_name} dang {door_status} - Khong chup anh")
+            notification_data = {
+                'door': door_name,
+                'status': 'open',
+                'timestamp': timestamp,
+                'image_uploaded': False,
+                'reason': f'Camera mode: {camera_mode} (auto capture disabled)'
+            }
+            self.web_notifier.send_notification(notification_data)
             self.logger.info("=" * 60)
             return
         
